@@ -50,51 +50,52 @@ def handle_imdb_id(message):
 
 @bot.callback_query_handler(func=lambda call: True)
 def callback(call):
-    if call.message:
-        if call.data == "show_more":
-            callback_button = types.InlineKeyboardButton(text="Коротко", callback_data="show_less")
-            watch_button = types.InlineKeyboardButton(text="Смотреть онлайн", callback_data="watch")
-            keyboard = types.InlineKeyboardMarkup()
-            keyboard.add(callback_button)
-            keyboard.add(watch_button)
-            response, photo = parser.full_output, parser.photo
-            if photo is not None:
-                bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,
-                                      text="[​​​​​​​​​​​]({}) {}".format(photo, response), parse_mode='markdown',
-                                      reply_markup=keyboard)
-            else:
-                bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,
-                                      text=response, reply_markup=keyboard)
-        if call.data == "show_less":
-            callback_button = types.InlineKeyboardButton(text="Узнать больше", callback_data="show_more")
-            watch_button = types.InlineKeyboardButton(text="Смотреть онлайн", callback_data="watch")
-            keyboard = types.InlineKeyboardMarkup()
-            keyboard.add(callback_button)
-            keyboard.add(watch_button)
-            response, photo = parser.output, parser.photo
-            if photo is not None:
-                bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,
-                                      text="[​​​​​​​​​​​]({}) {}".format(photo, response), parse_mode='markdown',
-                                      reply_markup=keyboard)
-            else:
-                bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,
-                                      text=response, reply_markup=keyboard)
-        if call.data == "watch":
-            back_button = types.InlineKeyboardButton(text="Назад", callback_data="show_less")
-            ivi_button = types.InlineKeyboardButton(text="💰 IVI", url=config.LINK_IVI + parser.name)
-            okko_button = types.InlineKeyboardButton(text="💰 OKKO", url=config.LINK_OKKO + parser.name)
-            kp_button = types.InlineKeyboardButton(text="💰 KINOPOISK", url=config.link_kinopoisk(parser.id))
-            fs_button = types.InlineKeyboardButton(text="🆓 FS", url=config.LINK_FS + parser.name)
-            hd_button = types.InlineKeyboardButton(text="🆓 HDREZKA", url=config.LINK_HDREZKA + parser.name)
-            ba_button = types.InlineKeyboardButton(text="🆓 BASKINO", url=config.LINK_BASKINO + parser.name)
-
-            keyboard = types.InlineKeyboardMarkup()
-            keyboard.add(back_button)
-            keyboard.add(ivi_button, okko_button, kp_button)
-            keyboard.add(fs_button, hd_button, ba_button)
-
+    if not call.message:
+        return
+    if call.data == "show_more":
+        callback_button = types.InlineKeyboardButton(text="Коротко", callback_data="show_less")
+        watch_button = types.InlineKeyboardButton(text="Смотреть онлайн", callback_data="watch")
+        keyboard = types.InlineKeyboardMarkup()
+        keyboard.add(callback_button)
+        keyboard.add(watch_button)
+        response, photo = parser.full_output, parser.photo
+        if photo is not None:
             bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,
-                                  text=config.WATCH_MSG, reply_markup=keyboard)
+                                  text="[​​​​​​​​​​​]({}) {}".format(photo, response), parse_mode='markdown',
+                                  reply_markup=keyboard)
+        else:
+            bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,
+                                  text=response, reply_markup=keyboard)
+    if call.data == "show_less":
+        callback_button = types.InlineKeyboardButton(text="Узнать больше", callback_data="show_more")
+        watch_button = types.InlineKeyboardButton(text="Смотреть онлайн", callback_data="watch")
+        keyboard = types.InlineKeyboardMarkup()
+        keyboard.add(callback_button)
+        keyboard.add(watch_button)
+        response, photo = parser.output, parser.photo
+        if photo is not None:
+            bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,
+                                  text="[​​​​​​​​​​​]({}) {}".format(photo, response), parse_mode='markdown',
+                                  reply_markup=keyboard)
+        else:
+            bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,
+                                  text=response, reply_markup=keyboard)
+    if call.data == "watch":
+        back_button = types.InlineKeyboardButton(text="Назад", callback_data="show_less")
+        ivi_button = types.InlineKeyboardButton(text="💰 IVI", url=config.LINK_IVI + parser.name)
+        okko_button = types.InlineKeyboardButton(text="💰 OKKO", url=config.LINK_OKKO + parser.name)
+        kp_button = types.InlineKeyboardButton(text="💰 KINOPOISK", url=config.link_kinopoisk(parser.id))
+        fs_button = types.InlineKeyboardButton(text="🆓 FS", url=config.LINK_FS + parser.name)
+        hd_button = types.InlineKeyboardButton(text="🆓 HDREZKA", url=config.LINK_HDREZKA + parser.name)
+        ba_button = types.InlineKeyboardButton(text="🆓 BASKINO", url=config.LINK_BASKINO + parser.name)
+
+        keyboard = types.InlineKeyboardMarkup()
+        keyboard.add(back_button)
+        keyboard.add(ivi_button, okko_button, kp_button)
+        keyboard.add(fs_button, hd_button, ba_button)
+
+        bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,
+                              text=config.WATCH_MSG, reply_markup=keyboard)
 
 
 @bot.message_handler(content_types=["text"])

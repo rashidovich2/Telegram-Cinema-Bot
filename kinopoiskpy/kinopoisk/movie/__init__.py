@@ -71,7 +71,7 @@ class Movie(KinopoiskObject):
         self.register_source('series', MovieSeries)
 
     def __repr__(self):
-        return '{} ({}), {}'.format(self.title, self.title_en, self.year or '-')
+        return f"{self.title} ({self.title_en}), {self.year or '-'}"
 
     def add_trailer(self, trailer_id):
         trailer = Trailer(trailer_id)
@@ -123,8 +123,7 @@ class Trailer(object):
 
     @property
     def file(self):
-        trailer_file = 'gettrailer.php?quality=hd&trailer_id={}'.format(self.id)
-        return trailer_file
+        return f'gettrailer.php?quality=hd&trailer_id={self.id}'
 
 
 @python_2_unicode_compatible
@@ -140,7 +139,7 @@ class SeriesEpisode(object):
         self.release_date = release_date
 
     def __repr__(self):
-        return '{}, {}'.format(self.title if self.title else '???', self.release_date or '-')
+        return f"{self.title if self.title else '???'}, {self.release_date or '-'}"
 
 
 @python_2_unicode_compatible
@@ -157,7 +156,7 @@ class SeriesSeason(object):
             self.episodes = episodes
 
     def __repr__(self):
-        return '{}: {}'.format(self.year, len(self.episodes))
+        return f'{self.year}: {len(self.episodes)}'
 
 
 class MovieManager(Manager):

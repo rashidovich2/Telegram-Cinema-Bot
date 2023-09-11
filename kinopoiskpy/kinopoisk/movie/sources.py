@@ -51,8 +51,7 @@ class MovieCareerLink(KinopoiskPage):
         if year and not self.instance.series:
             self.instance.year = self.prepare_int(year)
         elif self.instance.series:
-            series_start = re.findall(r'[0-9]{4}', movie_type)
-            if series_start:
+            if series_start := re.findall(r'[0-9]{4}', movie_type):
                 start = self.prepare_int(series_start[0])
                 if year != '...':
                     self.instance.series_years = (start, self.prepare_int(year))
@@ -216,8 +215,9 @@ class MovieMainPage(KinopoiskPage):
 
         content_info = BeautifulSoup(self.content, 'html.parser')
 
-        table_info = content_info.find('table', {'class': re.compile(r'^info')})
-        if table_info:
+        if table_info := content_info.find(
+            'table', {'class': re.compile(r'^info')}
+        ):
             for tr in table_info.findAll('tr'):
                 tds = tr.findAll('td')
                 name = tds[0].text
@@ -261,8 +261,9 @@ class MovieMainPage(KinopoiskPage):
         self.instance.rating = self.extract('rating', to_float=True)
         self.instance.votes = self.extract('votes', to_int=True)
 
-        imdb = re.findall(r'^IMDb: ([0-9\.]+) \(([0-9 ]+)\)$', self.extract('imdb'))
-        if imdb:
+        if imdb := re.findall(
+            r'^IMDb: ([0-9\.]+) \(([0-9 ]+)\)$', self.extract('imdb')
+        ):
             self.instance.imdb_rating = float(imdb[0][0])
             self.instance.imdb_votes = self.prepare_int(imdb[0][1])
 
@@ -354,7 +355,7 @@ class MovieTrailersPage(KinopoiskPage):
         )
 
         current_film_id = current_film_url[0].split('/')[-2:-1][0]
-        self.instance.url = "https://www.kinopoisk.ru/film/{}".format(current_film_id)
+        self.instance.url = f"https://www.kinopoisk.ru/film/{current_film_id}"
         trailers_kinopoisk_urls = list(set(
             re.findall(r'/trailer/player/share/\d+', self.content)
         ))

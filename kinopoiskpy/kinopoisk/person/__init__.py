@@ -35,9 +35,9 @@ class Person(KinopoiskObject):
     def __repr__(self):
         repr = self.name
         if self.name_en:
-            repr += ' ({})'.format(self.name_en)
+            repr += f' ({self.name_en})'
         if self.year_birth:
-            repr += ', {}'.format(self.year_birth)
+            repr += f', {self.year_birth}'
         return repr
 
 

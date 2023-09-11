@@ -45,15 +45,19 @@ class Manager(object):
             # <h2 class="textorangebig" style="font:100 18px">К сожалению, сервер недоступен...</h2>
             if content.find('<h2 class="textorangebig" style="font:100 18px">') != -1:
                 return []
-            content_results = content[content.find('<div class="search_results">'):content.find(
-                '<div style="height: 40px"></div>')]
-            if content_results:
+            if content_results := content[
+                content.find('<div class="search_results">') : content.find(
+                    '<div style="height: 40px"></div>'
+                )
+            ]:
                 from bs4 import BeautifulSoup  # import here for successful installing via pip
                 soup_results = BeautifulSoup(content_results, 'html.parser')
                 # <div class="element width_2">
                 results = soup_results.findAll('div', attrs={'class': re.compile('element')})
                 if not results:
-                    raise ValueError('No objects found in search results by request "%s"' % response.url)
+                    raise ValueError(
+                        f'No objects found in search results by request "{response.url}"'
+                    )
                 instances = []
                 for result in results:
                     instance = self.kinopoisk_object.get_parsed('link', str(result))
@@ -61,7 +65,7 @@ class Manager(object):
                         instances += [instance]
                 return instances
 
-            raise ValueError('Unknown html layout found by request "%s"' % response.url)
+            raise ValueError(f'Unknown html layout found by request "{response.url}"')
 
     def get_url_with_params(self, query):
         return 'http://www.kinopoisk.ru/index.php', {'kp_query': query}
@@ -127,22 +131,21 @@ class KinopoiskObject(object):
     def get_url(self, name, postfix='', **kwargs):
         url = self._urls.get(name)
         if not url:
-            raise ValueError('There is no urlpage with name "%s"' % name)
+            raise ValueError(f'There is no urlpage with name "{name}"')
         if not self.id:
             raise ValueError('ID of object is empty')
         kwargs['id'] = self.id
-        return ('http://www.kinopoisk.ru' + url).format(**kwargs) + postfix
+        return f'http://www.kinopoisk.ru{url}'.format(**kwargs) + postfix
 
     def set_source(self, name):
         if name not in self._sources:
             self._sources += [name]
 
     def get_source_instance(self, name, **kwargs):
-        class_name = self._source_classes.get(name)
-        if not class_name:
-            raise ValueError('There is no source with name "%s"' % name)
-        instance = class_name(name, **kwargs)
-        return instance
+        if class_name := self._source_classes.get(name):
+            return class_name(name, **kwargs)
+        else:
+            raise ValueError(f'There is no source with name "{name}"')
 
 
 class KinopoiskImage(KinopoiskObject):
@@ -174,22 +177,21 @@ class KinopoiskPage(object):
         raise NotImplementedError()
 
     def extract(self, name, to_str=False, to_int=False, to_float=False):
-        if name in self.xpath:
-            xpath = self.xpath[name]
-            elements = self.element.xpath(xpath)
-            if xpath[-7:] == '/text()' or '/@' in xpath:
-                value = ' '.join(elements) if elements else ''
-            else:
-                value = elements
-            if to_str:
-                value = self.prepare_str(value)
-            if to_int:
-                value = self.prepare_int(value) if value else None
-            if to_float:
-                value = float(value) if value else None
-            return value
+        if name not in self.xpath:
+            raise ValueError(f"Xpath element with name `{name}` is not configured")
+        xpath = self.xpath[name]
+        elements = self.element.xpath(xpath)
+        if xpath[-7:] == '/text()' or '/@' in xpath:
+            value = ' '.join(elements) if elements else ''
         else:
-            raise ValueError("Xpath element with name `{}` is not configured".format(name))
+            value = elements
+        if to_str:
+            value = self.prepare_str(value)
+        if to_int:
+            value = self.prepare_int(value) if value else None
+        if to_float:
+            value = float(value) if value else None
+        return value
 
     def prepare_str(self, value):
         if six.PY2:
@@ -277,8 +279,10 @@ class KinopoiskImagesPage(KinopoiskPage):
     field_name = None
 
     def get(self, page=1):
-        response = self.request.get(self.instance.get_url(self.source_name, postfix='page/{}/'.format(page)),
-                                    headers=HEADERS)
+        response = self.request.get(
+            self.instance.get_url(self.source_name, postfix=f'page/{page}/'),
+            headers=HEADERS,
+        )
         response.connection.close()
         content = response.content.decode('windows-1251', 'ignore')
 
@@ -290,18 +294,22 @@ class KinopoiskImagesPage(KinopoiskPage):
 
         from bs4 import BeautifulSoup
         soup_content = BeautifulSoup(content, 'html.parser')
-        table = soup_content.findAll('table', attrs={'class': re.compile('^fotos')})
-        if table:
-            self.content = str(table[0])
-            self.parse()
-            # may be there is more pages?
-            if len(getattr(self.instance, self.field_name)) % 21 == 0:
-                try:
-                    self.get(page + 1)
-                except ValueError:
-                    return
-        else:
-            raise ValueError('Parse error. Do not found posters for movie %s' % (self.instance.get_url('posters')))
+        if not (
+            table := soup_content.findAll(
+                'table', attrs={'class': re.compile('^fotos')}
+            )
+        ):
+            raise ValueError(
+                f"Parse error. Do not found posters for movie {self.instance.get_url('posters')}"
+            )
+        self.content = str(table[0])
+        self.parse()
+        # may be there is more pages?
+        if len(getattr(self.instance, self.field_name)) % 21 == 0:
+            try:
+                self.get(page + 1)
+            except ValueError:
+                return
 
     def parse(self,):
         urls = getattr(self.instance, self.field_name, [])
@@ -317,8 +325,9 @@ class KinopoiskImagesPage(KinopoiskPage):
             response = self.request.get(picture.get_url(), headers=HEADERS)
             response.connection.close()
             content = response.content.decode('windows-1251', 'ignore')
-            img = BeautifulSoup(content, 'html.parser').find('img', attrs={'id': 'image'})
-            if img:
+            if img := BeautifulSoup(content, 'html.parser').find(
+                'img', attrs={'id': 'image'}
+            ):
                 img_url = img['src']
                 if img_url not in urls:
                     urls.append(img_url)
